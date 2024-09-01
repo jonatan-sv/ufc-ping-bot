@@ -215,6 +215,8 @@ export async function trocar(msg: UserMessage, bot: TelegramBot) {
   const options = { reply_markup: { inline_keyboard: buttons } };
   bot.sendMessage(chatId, 'Escolha uma opção:', options);
 
+  bot.removeAllListeners('callback_query');
+
   bot.on('callback_query', async (callbackQuery) => {
     const clickedUsername = callbackQuery.from.username;
     
@@ -236,6 +238,7 @@ export async function trocar(msg: UserMessage, bot: TelegramBot) {
     bot.sendMessage(chatId, fila.listAll(), conf); 
   });
 }
+
 
 
 export async function limpar (msg: UserMessage, bot: TelegramBot) {
