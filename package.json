@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Um servidor para um bot no Telegram que organiza filas para o Ping Pong na UFC de Quixadá.",
   "main": "index.ts",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "start": "tsx watch index.ts"
   },
