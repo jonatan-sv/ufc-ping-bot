@@ -1,7 +1,5 @@
 import TelegramBot, { SendMessageOptions } from "node-telegram-bot-api";
-import { promises as fs } from "fs";
 import { fila } from "../index";
-import logger from "../logger";
 
 type Match = RegExpExecArray | null;
 type UserMessage = TelegramBot.Message;
@@ -15,19 +13,6 @@ let intervalId: NodeJS.Timeout; // Intervalo de update da mensagem
 async function checkAdmin(username: string) {
   const authorizedUsers = process.env.MODS?.split(", ") ?? [];
   return authorizedUsers.includes(username);
-}
-
-async function saveQueueToFile() {
-  const queueData = {
-    fila: fila.show(),
-  };
-
-  try {
-    await fs.writeFile(".cache/fila.json", JSON.stringify(queueData, null, 2));
-    logger.info("Arquivo fila.json salvo com sucesso!");
-  } catch (error) {
-    logger.error("Erro ao salvar o arquivo:", error);
-  }
 }
 
 export async function ping(msg: UserMessage, bot: TelegramBot) {
@@ -52,7 +37,6 @@ export async function marcar(msg: UserMessage, match: Match, bot: TelegramBot) {
     fila.add(name)
   }
 
-  await saveQueueToFile();
   bot.sendMessage(chatId, fila.listAll(), conf);
 }
 
@@ -143,26 +127,12 @@ export async function tirar(msg: UserMessage, match: Match, bot: TelegramBot) {
     fila.remove(pessoa);
   }
 
-  await saveQueueToFile();
   bot.sendMessage(chatId, fila.listAll(), conf);
 }
 
 export async function mostrarFila (msg: UserMessage, bot: TelegramBot) {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, fila.listAll(), conf);
-}
-
-export async function backup (msg: UserMessage, bot: TelegramBot) {
-  const chatId = msg.chat.id;
-  const data = JSON.parse(await fs.readFile(".cache/fila.json", "utf-8"));
-
-  fila.clear();
-  for (let item of data["fila"]) {
-    fila.add(item);
-  }
-
-  bot.sendMessage(chatId, fila.listAll(), conf);
-  bot.sendMessage(chatId, "✔️ *Última fila obtida com sucesso!*", conf);
 }
 
 export async function creditos (msg: UserMessage, bot: TelegramBot) {
@@ -192,7 +162,6 @@ export async function furar (msg: UserMessage, match: Match, bot: TelegramBot,) 
   const result = fila.insert(pessoa, position);
   bot.sendMessage(chatId, result, conf);
 
-  await saveQueueToFile();
   bot.sendMessage(chatId, fila.listAll(), conf);
 }
 
@@ -232,7 +201,6 @@ export async function trocar(msg: UserMessage, bot: TelegramBot) {
     });
     
     fila.moveToEnd(data);
-    await saveQueueToFile(); 
     bot.sendMessage(chatId, fila.listAll(), conf); 
   });
 }
@@ -248,7 +216,6 @@ export async function limpar (msg: UserMessage, bot: TelegramBot) {
     return;
   }
 
-  await saveQueueToFile();
   bot.sendMessage(chatId, result, conf);
 }
 

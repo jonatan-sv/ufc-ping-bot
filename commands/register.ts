@@ -14,7 +14,6 @@ const registerCommands = (bot: TelegramBot) => {
   bot.onText(/\/creditos/,         (msg)        => cmd.creditos(msg, bot));
   bot.onText(/\/qrcode/,           (msg)        => cmd.qrcode(msg, bot));
   bot.onText(/\/ping/,             (msg)        => cmd.ping(msg, bot));
-  bot.onText(/\/backup/,           (msg)        => cmd.backup(msg, bot));
 
   // TODO: Setar os outros comandos
   bot.setMyCommands([
