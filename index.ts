@@ -7,7 +7,9 @@ export const fila = new Queue();
 import dotenv from "dotenv";
 dotenv.config();
 
-const token = process.env.TOKEN || "";
-const bot = new TelegramBot(token, { polling: true });
+export default function startBot() {
+  const token = process.env.TOKEN || "";
+  const bot = new TelegramBot(token, { polling: true });
 
-registerCommands(bot);
+  registerCommands(bot);
+}
