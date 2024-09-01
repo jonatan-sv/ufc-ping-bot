@@ -7,6 +7,9 @@ type Match = RegExpExecArray | null;
 type UserMessage = TelegramBot.Message;
 const conf: SendMessageOptions = { parse_mode: "Markdown" }; // Permite mandar mensagens formatadas
 let canSendQR = true; // Evita span do QRCode
+let warmUp = true; // Permite o esquenta
+let timeoutId: NodeJS.Timeout; // Intervalo do esquenta
+let intervalId: NodeJS.Timeout; // Intervalo de update da mensagem
 
 
 async function checkAdmin(username: string) {
@@ -53,19 +56,59 @@ export async function marcar(msg: UserMessage, match: Match, bot: TelegramBot) {
   bot.sendMessage(chatId, fila.listAll(), conf);
 }
 
-export async function esquenta (msg: UserMessage, match: Match, bot: TelegramBot) {
+export async function esquenta(msg: UserMessage, match: Match, bot: TelegramBot) {
   const chatId = msg.chat.id;
   const username = msg.from?.username ?? "";
-  const time = parseInt(match![1]);
+  let time = parseInt(match![1]);
 
   const delayer = async (minutes: number) => {
-    bot.sendMessage(
-      chatId,
-      `🔥 Esquentando... por ${minutes + (minutes === 1 ? " minuto" : " minutos")}! 🔥`
-    );
-    return new Promise((resolve) => {
-      setTimeout(resolve, minutes * 60 * 1000);
-    });
+    let timeInSeconds = minutes * 60; 
+    let messageId: number;
+    const checkMessageId = null;
+
+    const updateMessage = async () => {
+      if (timeInSeconds <= 0) {
+        return;
+      }
+      
+      if (messageId) {
+        await bot.editMessageText(`🔥 Esquentando... Tempo restante: ${Math.floor(timeInSeconds / 60)}:${timeInSeconds % 60}! 🔥`, {
+          chat_id: chatId,
+          message_id: messageId
+        });
+      } else {
+        const sentMessage = await bot.sendMessage(chatId, `🔥 Esquentando... Tempo restante: ${Math.floor(timeInSeconds / 60)}:${timeInSeconds % 60 < 10 ? "0" : ""}${timeInSeconds % 60}! 🔥`);
+        messageId = sentMessage.message_id;
+      }
+
+      timeInSeconds -= 5;
+    };
+
+    if (!warmUp && time === 0 && await checkAdmin(username)) {
+      warmUp = true;
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+      bot.sendMessage(chatId, "❌ *O esquenta foi cancelado!* ❌", conf);
+      return;
+    }
+    
+    if (!warmUp) {
+      bot.sendMessage(chatId, "❌ *O esquenta já começou!*", conf);
+      return;
+    }
+    
+    warmUp = false;
+
+    await updateMessage();
+
+    intervalId = setInterval(updateMessage, 5 * 1000);
+
+    timeoutId = setTimeout(() => {
+      warmUp = true;
+      clearInterval(intervalId);
+      bot.sendMessage(chatId, "✅ O esquenta acabou! ✅", { reply_to_message_id: msg.message_id });
+      bot.deleteMessage(chatId, messageId);
+    }, minutes * 60 * 1000);
   };
 
   if (!await checkAdmin(username)) {
@@ -79,7 +122,6 @@ export async function esquenta (msg: UserMessage, match: Match, bot: TelegramBot
   }
 
   await delayer(time);
-  bot.sendMessage(chatId, "🔥 O esquenta acabou!", { reply_to_message_id: msg.message_id });
 }
 
 export async function proximo(msg: UserMessage, bot: TelegramBot) {
