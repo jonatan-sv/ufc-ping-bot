@@ -2,7 +2,6 @@ import TelegramBot, { SendMessageOptions } from "node-telegram-bot-api";
 import { promises as fs } from "fs";
 import { fila } from "../index";
 import logger from "../logger";
-import { parse } from "path";
 
 type Match = RegExpExecArray | null;
 type UserMessage = TelegramBot.Message;
@@ -57,57 +56,6 @@ export async function marcar(msg: UserMessage, match: Match, bot: TelegramBot) {
   bot.sendMessage(chatId, fila.listAll(), conf);
 }
 
-/*export async function esquenta(msg: UserMessage, match: Match, bot: TelegramBot) {
-  const chatId = msg.chat.id;
-  const username = msg.from?.username ?? "";
-  let time = parseInt(match![1]);
-
-  const delayer = async (minutes: number) => {
-
-    if (!warmUp && time === 0 && await checkAdmin(username)) {
-      warmUp = true;
-      clearTimeout(timeoutId);
-      bot.sendMessage(chatId, "❌ O esquenta foi cancelado! ❌", conf);
-      return;
-    }
-    
-    if (!warmUp) {
-      bot.sendMessage(chatId, "❌ *O esquenta já começou!*", conf);
-      return;
-    }
-    
-    warmUp = false; 
-
-    /*
-    bot.sendMessage(
-      chatId,
-      `🔥 Esquentando... por ${minutes + (minutes === 1 ? " minuto" : " minutos")}! 🔥`,
-      { reply_to_message_id: msg.message_id }
-    );
-
-    bot.sendMessage(chatId, `🔥 Esquentando `,
-     { reply_to_message_id: msg.message_id });
-    
-    timeoutId = setTimeout(() => {
-      warmUp = true;
-      bot.sendMessage(chatId, "✅ O esquenta acabou! ✅", { reply_to_message_id: msg.message_id });
-    }, minutes * 60 * 1000);
-  
-  };
-
-  if (!await checkAdmin(username)) {
-    bot.sendMessage(chatId, "❌ *Você não possui permissão para usar este comando!*", conf);
-    return;
-  }
-
-  if (time > 15) {
-    bot.sendMessage(chatId, `❌ *${time} minutos?! Compra logo uma mesa!*`, conf);
-    return;
-  }
-
-  await delayer(time);
-}*/
-
 export async function esquenta(msg: UserMessage, match: Match, bot: TelegramBot) {
   const chatId = msg.chat.id;
   const username = msg.from?.username ?? "";
@@ -133,14 +81,14 @@ export async function esquenta(msg: UserMessage, match: Match, bot: TelegramBot)
         messageId = sentMessage.message_id;
       }
 
-      timeInSeconds -= 10;
+      timeInSeconds -= 5;
     };
 
     if (!warmUp && time === 0 && await checkAdmin(username)) {
       warmUp = true;
       clearTimeout(timeoutId);
       clearInterval(intervalId);
-      bot.sendMessage(chatId, "❌ O esquenta foi cancelado! ❌", conf);
+      bot.sendMessage(chatId, "❌ *O esquenta foi cancelado!* ❌", conf);
       return;
     }
     
@@ -153,7 +101,7 @@ export async function esquenta(msg: UserMessage, match: Match, bot: TelegramBot)
 
     await updateMessage();
 
-    intervalId = setInterval(updateMessage, 10 * 1000);
+    intervalId = setInterval(updateMessage, 5 * 1000);
 
     timeoutId = setTimeout(() => {
       warmUp = true;
